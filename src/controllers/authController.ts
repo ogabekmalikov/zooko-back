@@ -3,6 +3,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 
+interface AuthRequest extends Request {
+  user?: any;
+}
+
 export const register = async (req: Request, res: Response): Promise<any> => {
   try {
     const { firstName, lastName, userName, email, password, role, grade } = req.body;
@@ -129,7 +133,38 @@ export const deleteStudent = async (req: Request, res: Response): Promise<any> =
   }
 };
 
-// Update a student (admin only)
+// Update own profile (authenticated user)
+export const updateProfile = async (req: AuthRequest, res: Response): Promise<any> => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Not authorized" });
+
+    const { firstName, lastName, userName, email, password, avatar } = req.body;
+    if (firstName) user.firstName = firstName;
+    if (lastName) user.lastName = lastName;
+    if (userName) {
+      const existing = await User.findOne({ userName, _id: { $ne: user._id } });
+      if (existing) return res.status(400).json({ message: "Bu foydalanuvchi nomi band" });
+      user.userName = userName;
+    }
+    if (email) {
+      const existing = await User.findOne({ email, _id: { $ne: user._id } });
+      if (existing) return res.status(400).json({ message: "Bu email band" });
+      user.email = email;
+    }
+    if (avatar !== undefined) user.avatar = avatar;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+    }
+
+    await user.save();
+    const { password: _, ...userObj } = user.toObject();
+    res.json(userObj);
+  } catch (error: any) {
+    res.status(500).json({ message: "Error updating profile", error: error.message });
+  }
+};
 export const updateStudent = async (req: Request, res: Response): Promise<any> => {
   try {
     const user = await User.findById(req.params.id);

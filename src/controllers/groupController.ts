@@ -164,7 +164,7 @@ export const addStudentsToGroup = async (req: Request, res: Response): Promise<a
     // Add to this group (avoid duplicates)
     const existing = group.students.map((s: any) => s.toString());
     const toAdd = idsToAdd.filter((id: string) => !existing.includes(id));
-    group.students.push(...toAdd);
+    group.students.push(...toAdd as any[]);
     await group.save();
 
     // Update students' grade to match group

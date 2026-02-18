@@ -28,8 +28,7 @@ const userSchema = new mongoose.Schema(
 
     email: {
       type: String,
-      required: true,
-      unique: true,
+      default: "",
     },
 
     password: {
@@ -55,6 +54,11 @@ const userSchema = new mongoose.Schema(
 
     grade: {
       type: String,
+    },
+
+    lastLogin: {
+      type: Date,
+      default: null,
     },
 
     completedCourses: [

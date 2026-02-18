@@ -18,7 +18,7 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({
+const imageUpload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (_req, file, cb) => {
@@ -33,11 +33,34 @@ const upload = multer({
   },
 });
 
+const videoUpload = multer({
+  storage,
+  limits: { fileSize: 500 * 1024 * 1024 }, // 500MB
+  fileFilter: (_req, file, cb) => {
+    const allowed = /mp4|webm|ogg|mov|avi|mkv/;
+    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
+    const mime = /^video\//.test(file.mimetype);
+    if (ext || mime) {
+      cb(null, true);
+    } else {
+      cb(new Error("Faqat video fayllari ruxsat etiladi (mp4, webm, ogg, mov)"));
+    }
+  },
+});
+
 const router = express.Router();
 
-router.post("/", protect, upload.single("image"), (req: any, res: any) => {
+router.post("/", protect, imageUpload.single("image"), (req: any, res: any) => {
   if (!req.file) {
     return res.status(400).json({ message: "Rasm fayli yuborilmadi" });
+  }
+  const url = `/uploads/${req.file.filename}`;
+  res.json({ url });
+});
+
+router.post("/video", protect, videoUpload.single("video"), (req: any, res: any) => {
+  if (!req.file) {
+    return res.status(400).json({ message: "Video fayli yuborilmadi" });
   }
   const url = `/uploads/${req.file.filename}`;
   res.json({ url });

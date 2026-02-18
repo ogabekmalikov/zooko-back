@@ -28,7 +28,14 @@ export const createCourse = async (
 export const getCourses = async (req: Request, res: Response): Promise<any> => {
   try {
     const filter: any = {};
-    if (req.query.grade) {
+    if (req.query.grades) {
+      // Multiple grades: show courses for any of these grades + "all"
+      const gradeList = (req.query.grades as string).split(",");
+      filter.$or = [
+        { grade: { $in: gradeList } },
+        { grade: "all" },
+      ];
+    } else if (req.query.grade) {
       filter.$or = [{ grade: req.query.grade }, { grade: "all" }];
     }
     const courses = await Course.find(filter)

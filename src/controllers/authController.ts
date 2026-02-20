@@ -61,6 +61,56 @@ export const register = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
+export const publicRegister = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { firstName, lastName, userName, password, grade } = req.body;
+
+    if (!firstName || !lastName || !userName || !password || !grade) {
+      return res.status(400).json({ message: "Barcha maydonlarni to'ldiring" });
+    }
+
+    const existingUser = await User.findOne({ userName });
+    if (existingUser) {
+      return res.status(400).json({ message: "Bu foydalanuvchi nomi band" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = await User.create({
+      firstName,
+      lastName,
+      userName,
+      password: hashedPassword,
+      role: "user",
+      grade,
+      status: "active",
+    });
+
+    const token = jwt.sign(
+      { id: newUser._id, role: newUser.role },
+      process.env.JWT_SECRET || "default_secret",
+      { expiresIn: "1d" }
+    );
+
+    res.status(201).json({
+      message: "Ro'yxatdan o'tdingiz!",
+      token,
+      user: {
+        id: newUser._id,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        userName: newUser.userName,
+        role: newUser.role,
+        grade: newUser.grade,
+      },
+    });
+  } catch (error: any) {
+    console.error("Public Register Error:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
 export const login = async (req: Request, res: Response): Promise<any> => {
   try {
     const { userName, password } = req.body;
@@ -124,6 +174,30 @@ export const getStudents = async (req: Request, res: Response): Promise<any> => 
     res.json(students);
   } catch (error: any) {
     res.status(500).json({ message: "Error fetching students", error: error.message });
+  }
+};
+
+// Get pending students (admin only)
+export const getPendingStudents = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const students = await User.find({ role: "user", status: "pending" }).select("-password").sort({ createdAt: -1 });
+    res.json(students);
+  } catch (error: any) {
+    res.status(500).json({ message: "Error fetching pending students", error: error.message });
+  }
+};
+
+// Approve a pending student (admin only)
+export const approveStudent = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "Student not found" });
+    user.status = "active";
+    await user.save();
+    const { password: _, ...userObj } = user.toObject();
+    res.json(userObj);
+  } catch (error: any) {
+    res.status(500).json({ message: "Error approving student", error: error.message });
   }
 };
 

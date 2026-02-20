@@ -167,10 +167,10 @@ export const addStudentsToGroup = async (req: Request, res: Response): Promise<a
     group.students.push(...toAdd as any[]);
     await group.save();
 
-    // Update students' grade to match group
+    // Update students' grade to match group and activate them
     await User.updateMany(
       { _id: { $in: idsToAdd } },
-      { $set: { grade: group.grade } }
+      { $set: { grade: group.grade, status: "active" } }
     );
 
     const populated = await Group.findById(group._id)

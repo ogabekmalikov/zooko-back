@@ -13,6 +13,7 @@ import progressRoutes from "./routes/progressRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import groupRoutes from "./routes/groupRoutes.js";
+import nazoratIshiRoutes from "./routes/nazoratIshiRoutes.js";
 
 dotenv.config();
 
@@ -59,6 +60,7 @@ const startServer = async () => {
     app.use("/api/upload", uploadRoutes);
     app.use("/api/notifications", notificationRoutes);
     app.use("/api/groups", groupRoutes);
+    app.use("/api/nazorat-ishi", nazoratIshiRoutes);
 
     app.get("/health", (req, res) => {
       res.status(200).json({ status: "OK", message: "Server is running" });

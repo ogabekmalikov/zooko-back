@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 // Question schemas (reuse patterns from courseModel)
 const quizOptionSchema = new mongoose.Schema({
   text: { type: String, required: true },
+  image: { type: String, default: "" },
 });
 
 const matchPairSchema = new mongoose.Schema({
@@ -25,6 +26,7 @@ const questionSchema = new mongoose.Schema({
   order: { type: Number, default: 0 },
   // Quiz fields
   question: { type: String },
+  questionImage: { type: String, default: "" },
   options: [quizOptionSchema],
   correctIndex: { type: Number },
   // Code challenge fields
